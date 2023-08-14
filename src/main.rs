@@ -45,6 +45,8 @@ pub fn Home(cx: Scope) -> Element {
         div {
             class: "relative flex flex-col min-h-screen",
             Header {name:"Pokérust".into()},
+            br {}
+            br {}
             h2 {
                 class: "text-2xl text-center",
                 "Random Pokémon:"
