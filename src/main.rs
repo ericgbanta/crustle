@@ -2,6 +2,7 @@
 
 use dioxus::prelude::*;
 use dioxus_router::prelude::*;
+use pokemon_rs;
 
 // Routes
 #[rustfmt::skip]
@@ -35,10 +36,15 @@ fn App(cx: Scope) -> Element {
 
 // Home component
 pub fn Home(cx: Scope) -> Element {
+    let random_pokemon = use_state(cx, || pokemon_rs::random(None).to_string());
     cx.render(rsx! {
         div {
             class: "relative flex flex-col min-h-screen",
             Header {name:"Pokérust".into()},
+            h2 { // Add this line to display the random Pokémon's name
+                class: "text-2xl text-center",
+                "Random Pokémon: {random_pokemon}"
+            }
             About {},
         }
     })

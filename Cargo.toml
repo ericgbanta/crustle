@@ -9,3 +9,5 @@ edition = "2021"
 dioxus = "0.4.0"
 dioxus-router = "0.4.1"
 dioxus-web = "0.4.0"
+pokemon-rs = "1.5.0"
+getrandom = { version = "0.2", features = ["js"] }
