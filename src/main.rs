@@ -37,14 +37,26 @@ fn App(cx: Scope) -> Element {
 // Home component
 pub fn Home(cx: Scope) -> Element {
     let random_pokemon = use_state(cx, || pokemon_rs::random(None).to_string());
+    let random_pokemon_id = use_state(cx, || {
+        pokemon_rs::get_id_by_name(&random_pokemon.get(), None).to_string()
+    });
+    let id_str = format!("{:03}", random_pokemon_id.get().parse::<u32>().unwrap_or(0));
     cx.render(rsx! {
         div {
             class: "relative flex flex-col min-h-screen",
             Header {name:"Pokérust".into()},
-            h2 { // Add this line to display the random Pokémon's name
+            h2 {
                 class: "text-2xl text-center",
-                "Random Pokémon: {random_pokemon}"
-            }
+                "Random Pokémon:"
+                strong { " {random_pokemon} " }
+            },
+            div {
+                class: "flex justify-center",
+                img {
+                    style: "max-width: 500px; max-height: 500px; margin-top: 20px;",
+                    src: "https://raw.githubusercontent.com/HybridShivam/Pokemon/master/assets/images/{id_str}.png",
+                }
+            },
             About {},
         }
     })
