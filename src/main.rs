@@ -79,6 +79,21 @@ pub fn Contact(cx: Scope) -> Element {
         div {
             class: "relative flex flex-col min-h-screen",
             Header {name:"Contact".into()},
+            div {
+                class: "text-center",
+                a {
+                    href: "https://github.com/ericgbanta",
+                    target: "_blank",
+                    "@ericgbanta"
+                }
+                // Space between the links
+                br {}
+                a {
+                    href: "https://github.com/ericgbanta/pokerust/issues/new/choose",
+                    target: "_blank",
+                    "File an issue"
+                }
+            },
             About {},
         }
     })
