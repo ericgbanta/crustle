@@ -1,7 +1,9 @@
 #![allow(non_snake_case)]
+mod models;
 
 use dioxus::prelude::*;
 use dioxus_router::prelude::*;
+use models::*;
 use pokemon_rs;
 
 // Routes
@@ -41,27 +43,81 @@ pub fn Home(cx: Scope) -> Element {
         pokemon_rs::get_id_by_name(&random_pokemon.get(), None).to_string()
     });
     let id_str = format!("{:03}", random_pokemon_id.get().parse::<u32>().unwrap_or(0));
-    cx.render(rsx! {
-        div {
-            class: "relative flex flex-col min-h-screen",
-            Header {name:"Pokérust".into()},
-            br {}
-            br {}
-            h2 {
-                class: "text-2xl text-center",
-                "Random Pokémon:"
-                strong { " {random_pokemon} " }
-            },
+    let pokemon_url = format!(
+        "https://pokeapi.co/api/v2/pokemon/{}",
+        random_pokemon.get().to_lowercase()
+    );
+    let species_url = format!(
+        "https://pokeapi.co/api/v2/pokemon-species/{}",
+        random_pokemon.get().to_lowercase()
+    );
+
+    let pokemon_data = use_future(cx, (), |_| async move {
+        reqwest::get(&pokemon_url).await?.json::<Pokemon>().await
+    });
+
+    let species_data = use_future(cx, (), |_| async move {
+        reqwest::get(&species_url)
+            .await?
+            .json::<PokemonSpecies>()
+            .await
+    });
+    cx.render(match (pokemon_data.value(), species_data.value()) {
+    (Some(Ok(pokemon)), Some(Ok(species))) => {
+        let english_flavor_texts: Vec<_> = species.flavor_text_entries
+            .iter()
+            .filter(|entry| entry.language.name == "en")
+            .collect();
+
+        rsx! {
             div {
-                class: "flex justify-center",
-                img {
-                    style: "max-width: 500px; max-height: 500px; margin-top: 20px;",
-                    src: "https://raw.githubusercontent.com/HybridShivam/Pokemon/master/assets/images/{id_str}.png",
-                }
-            },
-            About {},
+                class: "relative flex flex-col min-h-screen",
+                Header {name:"Pokérust".into()},
+                br {}
+                br {}
+                h2 {
+                    class: "text-2xl text-center",
+                    "Random Pokémon:"
+                    strong { format!(" {}", random_pokemon.get()) }
+                },
+                div {
+                    class: "flex justify-center",
+                    img {
+                        style: "max-width: 500px; max-height: 500px; margin-top: 20px;",
+                        src: "https://raw.githubusercontent.com/HybridShivam/Pokemon/master/assets/images/{id_str}.png",
+                    }
+                },
+                div {
+                    "Height: "
+                    format!("{} m", pokemon.height as f32 / 10.0)
+                },
+                div {
+                    "Weight: "
+                    format!("{} kg", pokemon.weight as f32 / 10.0)
+                },
+                div {
+                    for entry in english_flavor_texts {
+                        div {
+                            "Version: "
+                            format!("{}: {}", entry.version.name, entry.flavor_text)
+                        }
+                    }
+                },
+                About {},
+            }
         }
-    })
+    },
+    (Some(Err(_)), _) | (_, Some(Err(_))) => rsx! {
+        div {
+            "Failed to fetch Pokémon data."
+        }
+    },
+    (_, _) => rsx! {
+        div {
+            "Loading Pokémon data..."
+        }
+    },
+})
 }
 
 // Pokedex component
