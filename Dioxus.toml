@@ -16,7 +16,7 @@ asset_dir = "public"
 [web.app]
 
 # HTML title tag content
-title = "pokérust | 💖"
+title = "crustle | 💖"
 
 [web.watcher]
 

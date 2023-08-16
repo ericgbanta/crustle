@@ -200,6 +200,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "crustle"
+version = "0.1.0"
+dependencies = [
+ "dioxus",
+ "dioxus-router",
+ "dioxus-web",
+ "getrandom",
+ "pokemon-rs",
+ "reqwest",
+ "serde",
+ "serde_derive",
+ "serde_json",
+]
+
+[[package]]
 name = "darling"
 version = "0.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1289,21 +1304,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca6dbe7b91aee08b5b2ef6d13ad876ed65984a996b15f8e24cdf89eb20de4820"
 dependencies = [
  "rand",
-]
-
-[[package]]
-name = "pokerust"
-version = "0.1.0"
-dependencies = [
- "dioxus",
- "dioxus-router",
- "dioxus-web",
- "getrandom",
- "pokemon-rs",
- "reqwest",
- "serde",
- "serde_derive",
- "serde_json",
 ]
 
 [[package]]

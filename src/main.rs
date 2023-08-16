@@ -74,7 +74,7 @@ pub fn Home(cx: Scope) -> Element {
         rsx! {
             div {
                 class: "relative flex flex-col min-h-screen",
-                Header {name:"Pokérust".into()},
+                Header {name:"crustle".into()},
                 br {}
                 br {}
                 h2 {
@@ -165,7 +165,7 @@ pub fn Contact(cx: Scope) -> Element {
                 // Space between the links
                 br {}
                 a {
-                    href: "https://github.com/ericgbanta/pokerust/issues/new/choose",
+                    href: "https://github.com/ericgbanta/crustle/issues/new/choose",
                     target: "_blank",
                     "File an issue"
                 }
@@ -216,7 +216,7 @@ pub fn About(cx: Scope) -> Element {
         p {
             class: "mt-auto p-8 flex items-center italic text-xs",
             a {
-                href: "https://github.com/ericgbanta/pokerust/",
+                href: "https://github.com/ericgbanta/crustle/",
                 target: "_blank",
                 img {
                     class: "w-4 sm:w-8 align-middle mr-2",
