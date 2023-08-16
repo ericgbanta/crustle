@@ -52,6 +52,8 @@ pub fn Home(cx: Scope) -> Element {
         random_pokemon.get().to_lowercase()
     );
 
+    let pokemon_url_string = pokemon_url.clone();
+
     let pokemon_data = use_future(cx, (), |_| async move {
         reqwest::get(&pokemon_url).await?.json::<Pokemon>().await
     });
@@ -87,19 +89,33 @@ pub fn Home(cx: Scope) -> Element {
                         src: "https://raw.githubusercontent.com/HybridShivam/Pokemon/master/assets/images/{id_str}.png",
                     }
                 },
+                // Use flex for side-by-side display
                 div {
-                    "Height: "
-                    format!("{} m", pokemon.height as f32 / 10.0)
-                },
-                div {
-                    "Weight: "
-                    format!("{} kg", pokemon.weight as f32 / 10.0)
+                    class: "flex justify-center space-x-10", // space-x-10 to add space between elements
+                    div {
+                        class: "text-center",
+                        strong { "Height: " }
+                        format!("{} m", pokemon.height as f32 / 10.0)
+                    },
+                    div {
+                        class: "text-center",
+                        strong { "Weight: " }
+                        format!("{} kg", pokemon.weight as f32 / 10.0)
+                    }
                 },
                 div {
                     for entry in english_flavor_texts {
+                        // Card-like container for each version data
                         div {
-                            "Version: "
-                            format!("{}: {}", entry.version.name, entry.flavor_text)
+                            class: "bg-gray-100 m-4 p-4 rounded shadow", // this gives a light gray background, margin, padding, rounded corners and a subtle shadow
+                            h3 {
+                                class: "text-lg font-bold",
+                                format!("Version: {}", entry.version.name)
+                            },
+                            p {
+                                class: "text-gray-700", // light gray text color for the flavor text
+                                entry.flavor_text.clone()
+                            }
                         }
                     }
                 },
@@ -110,11 +126,13 @@ pub fn Home(cx: Scope) -> Element {
     (Some(Err(_)), _) | (_, Some(Err(_))) => rsx! {
         div {
             "Failed to fetch Pokémon data."
+            pokemon_url_string
         }
     },
     (_, _) => rsx! {
         div {
             "Loading Pokémon data..."
+            pokemon_url_string
         }
     },
 })
