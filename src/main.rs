@@ -89,9 +89,8 @@ pub fn Home(cx: Scope) -> Element {
                         src: "https://raw.githubusercontent.com/HybridShivam/Pokemon/master/assets/images/{id_str}.png",
                     }
                 },
-                // Use flex for side-by-side display
                 div {
-                    class: "flex justify-center space-x-10", // space-x-10 to add space between elements
+                    class: "flex justify-center space-x-10",
                     div {
                         class: "text-center",
                         strong { "Height: " }
@@ -105,15 +104,14 @@ pub fn Home(cx: Scope) -> Element {
                 },
                 div {
                     for entry in english_flavor_texts {
-                        // Card-like container for each version data
                         div {
-                            class: "bg-gray-100 m-4 p-4 rounded shadow", // this gives a light gray background, margin, padding, rounded corners and a subtle shadow
+                            class: "bg-gray-100 m-4 p-4 rounded shadow",
                             h3 {
                                 class: "text-lg font-bold",
                                 format!("Version: {}", entry.version.name)
                             },
                             p {
-                                class: "text-gray-700", // light gray text color for the flavor text
+                                class: "text-gray-700",
                                 entry.flavor_text.clone()
                             }
                         }
