@@ -73,6 +73,17 @@ pub fn Home(cx: Scope) -> Element {
                     }
                 },
                 div {
+                    class: "flex justify-center space-x-10",
+                    // Looping through the types and displaying each one
+                    for pokemon_type in &pokemon.types {
+                        div {
+                            class: "text-center",
+                            strong { "Type: " }
+                            pokemon_type.r#type.name.clone()
+                        }
+                    }
+                },
+                div {
                     for entry in english_flavor_texts {
                         div {
                             class: "bg-gray-100 m-4 p-4 rounded shadow",
