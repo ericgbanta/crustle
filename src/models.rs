@@ -6,6 +6,8 @@ pub struct Pokemon {
     pub id: i32,
     pub height: i32,
     pub weight: i32,
+    pub abilities: Vec<PokemonAbility>,
+    pub forms: Vec<NamedApiResource>,
     pub types: Vec<PokemonType>,
 }
 
@@ -29,6 +31,13 @@ pub struct Language {
 #[derive(Deserialize, Debug)]
 pub struct Version {
     pub name: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct PokemonAbility {
+    pub slot: i32,
+    pub is_hidden: bool,
+    pub ability: NamedApiResource,
 }
 
 #[derive(Deserialize, Debug)]

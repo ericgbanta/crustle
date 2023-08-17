@@ -41,6 +41,10 @@ pub fn Home(cx: Scope) -> Element {
             .filter(|entry| entry.language.name == "en")
             .collect();
 
+        let abilities_string = pokemon.abilities.iter().map(|pokemon_ability| {
+            pokemon_ability.ability.name.clone()
+        }).collect::<Vec<String>>().join(", ");
+
         rsx! {
             div {
                 class: "relative flex flex-col min-h-screen",
@@ -59,6 +63,7 @@ pub fn Home(cx: Scope) -> Element {
                         src: "https://raw.githubusercontent.com/HybridShivam/Pokemon/master/assets/images/{id_str}.png",
                     }
                 },
+                br {}
                 div {
                     class: "flex justify-center space-x-10",
                     div {
@@ -72,16 +77,24 @@ pub fn Home(cx: Scope) -> Element {
                         format!("{} kg", pokemon.weight as f32 / 10.0)
                     }
                 },
+                // Displaying types
                 div {
                     class: "flex justify-center space-x-10",
-                    // Looping through the types and displaying each one
-                    for pokemon_type in &pokemon.types {
+                    for (index, pokemon_type) in pokemon.types.iter().enumerate() {
                         div {
                             class: "text-center",
-                            strong { "Type: " }
+                            strong { format!("Type {}: ", index + 1) }
                             pokemon_type.r#type.name.clone()
                         }
                     }
+                },
+                div {
+                        class: "flex justify-center",
+                        div {
+                            class: "text-center",
+                            strong { "Abilities: " }
+                            abilities_string
+                        }
                 },
                 div {
                     for entry in english_flavor_texts {
