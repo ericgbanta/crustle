@@ -3,6 +3,7 @@
 use super::super::models::*;
 use super::about::About;
 use super::header::Header;
+use super::utilities::*;
 use dioxus::prelude::*;
 use pokemon_rs;
 
@@ -42,7 +43,7 @@ pub fn Home(cx: Scope) -> Element {
             .collect();
 
         let abilities_string = pokemon.abilities.iter().map(|pokemon_ability| {
-            pokemon_ability.ability.name.clone()
+            capitalize(&pokemon_ability.ability.name)
         }).collect::<Vec<String>>().join(", ");
 
         rsx! {
@@ -84,7 +85,7 @@ pub fn Home(cx: Scope) -> Element {
                         div {
                             class: "text-center",
                             strong { format!("Type {}: ", index + 1) }
-                            pokemon_type.r#type.name.clone()
+                            capitalize(&pokemon_type.r#type.name)
                         }
                     }
                 },
