@@ -11,7 +11,7 @@ use pokemon_rs;
 pub fn Home(cx: Scope) -> Element {
     let random_pokemon = use_state(cx, || pokemon_rs::random(None).to_string());
     let random_pokemon_id = use_state(cx, || {
-        pokemon_rs::get_id_by_name(&random_pokemon.get(), None).to_string()
+        pokemon_rs::get_id_by_name(random_pokemon.get(), None).to_string()
     });
     let id_str = format!("{:03}", random_pokemon_id.get().parse::<u32>().unwrap_or(0));
     let pokemon_url = format!(

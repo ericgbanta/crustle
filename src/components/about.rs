@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 // Constants
-const GITHUB_IMG: &'static str = wasm_or_else("github.svg", "public/github.svg");
+const GITHUB_IMG: &str = wasm_or_else("github.svg", "public/github.svg");
 
 // About component
 pub fn About(cx: Scope) -> Element {

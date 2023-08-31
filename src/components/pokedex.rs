@@ -13,13 +13,13 @@ const SPECIES_URL: &str = "https://pokeapi.co/api/v2/pokemon-species/";
 pub fn Pokedex(cx: Scope) -> Element {
     let pokemon_names = use_state(cx, || pokemon_rs::get_all(None));
     let selected_pokemon = use_state(cx, || String::from(""));
-    let pokemon_data = use_state(cx, || None::<Pokemon>);
+    let _pokemon_data = use_state(cx, || None::<Pokemon>);
     let selected_pokemon_id = use_state(cx, || String::from(""));
     let id_str = format!(
         "{:03}",
         selected_pokemon_id.get().parse::<u32>().unwrap_or(0)
     );
-    let species_data = use_state(cx, || None::<PokemonSpecies>);
+    let _species_data = use_state(cx, || None::<PokemonSpecies>);
     let pokemon_url = format!("{}{}", POKEMON_URL, selected_pokemon.get());
     let species_url = format!("{}{}", SPECIES_URL, selected_pokemon.get());
     let pokemon_url_string = pokemon_url.clone();
@@ -53,10 +53,10 @@ pub fn Pokedex(cx: Scope) -> Element {
                             onchange: move | event | {
                                 let selected_name = event.inner().clone();
                                 selected_pokemon.set(selected_name.value.clone().to_lowercase());
-                                let pokemon_url = format!("{}{}", POKEMON_URL, selected_name.value);
-                                let species_url = format!("{}{}", SPECIES_URL, selected_name.value);
+                                let _pokemon_url = format!("{}{}", POKEMON_URL, selected_name.value);
+                                let _species_url = format!("{}{}", SPECIES_URL, selected_name.value);
                                 let selected_pokemon_id = use_state(cx, || {pokemon_rs::get_id_by_name(&selected_name.value, None).to_string()});
-                                let id_str = format!("{:03}", selected_pokemon_id.parse::<u32>().unwrap_or(0));
+                                let _id_str = format!("{:03}", selected_pokemon_id.parse::<u32>().unwrap_or(0));
                             },
                             option { "Select One" },
                             for &pokemon_name in pokemon_names.get().iter() {
@@ -103,10 +103,10 @@ pub fn Pokedex(cx: Scope) -> Element {
                             onchange: move | event | {
                                 let selected_name = event.inner().clone();
                                 selected_pokemon.set(selected_name.value.clone().to_lowercase());
-                                let pokemon_url = format!("{}{}", POKEMON_URL, selected_name.value);
-                                let species_url = format!("{}{}", SPECIES_URL, selected_name.value);
+                                let _pokemon_url = format!("{}{}", POKEMON_URL, selected_name.value);
+                                let _species_url = format!("{}{}", SPECIES_URL, selected_name.value);
                                 let selected_pokemon_id = pokemon_rs::get_id_by_name(&capitalize(&selected_name.value), None).to_string();
-                                let id_str = format!("{:03}", selected_pokemon_id.parse::<u32>().unwrap_or(0));
+                                let _id_str = format!("{:03}", selected_pokemon_id.parse::<u32>().unwrap_or(0));
                             },
                             option { "Select One" },
                             for &pokemon_name in pokemon_names.get().iter() {
