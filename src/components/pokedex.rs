@@ -119,7 +119,11 @@ pub fn Pokedex(cx: Scope) -> Element {
                     class: "flex justify-center",
                     img {
                         style: "max-width: 500px; max-height: 500px; margin-top: 20px;",
-                        src: "https://raw.githubusercontent.com/HybridShivam/Pokemon/master/assets/images/{id_str}.png",
+                        src: pokemon.sprites.front_default.as_deref().unwrap_or("URL not available")
+                    },
+                    img {
+                        style: "max-width: 500px; max-height: 500px; margin-top: 20px;",
+                        src: pokemon.sprites.front_shiny.as_deref().unwrap_or("URL not available")
                     }
                 },
                 br {}

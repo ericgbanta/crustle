@@ -9,6 +9,7 @@ pub struct Pokemon {
     pub abilities: Vec<PokemonAbility>,
     pub forms: Vec<NamedApiResource>,
     pub types: Vec<PokemonType>,
+    pub sprites: PokemonSprites,
 }
 
 #[derive(Deserialize, Debug)]
@@ -44,6 +45,18 @@ pub struct PokemonAbility {
 pub struct PokemonType {
     pub slot: i32,
     pub r#type: NamedApiResource,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct PokemonSprites {
+    pub front_default: Option<String>,
+    pub front_shiny: Option<String>,
+    pub front_female: Option<String>,
+    pub front_shiny_female: Option<String>,
+    pub back_default: Option<String>,
+    pub back_shiny: Option<String>,
+    pub back_female: Option<String>,
+    pub back_shiny_female: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
