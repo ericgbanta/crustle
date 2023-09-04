@@ -109,17 +109,17 @@ pub fn Pokedex(cx: Scope) -> Element {
                 div {
                     class: "flex justify-center",
                     img {
-                        style: "max-width: 500px; max-height: 500px; margin-top: 20px;",
+                        style: "transform: scale(2); margin-top: 20px;",
                         src: pokemon.sprites.front_default.as_deref().unwrap_or("URL not available")
                     },
                     img {
-                        style: "max-width: 500px; max-height: 500px; margin-top: 20px;",
+                        style: "transform: scale(2); margin-top: 20px; margin-left: 80px;",
                         src: pokemon.sprites.front_shiny.as_deref().unwrap_or("URL not available")
                     }
                 },
                 br {}
                 div {
-                    class: "flex justify-center space-x-10",
+                    class: "flex justify-center space-x-10 mt-14",
                     div {
                         class: "text-center",
                         strong { "Height: " }
