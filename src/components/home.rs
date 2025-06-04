@@ -8,34 +8,41 @@ use dioxus::prelude::*;
 use pokemon_rs;
 
 // Home component
-pub fn Home(cx: Scope) -> Element {
-    let random_pokemon = use_state(cx, || pokemon_rs::random(None).to_string());
-    let random_pokemon_id = use_state(cx, || {
-        pokemon_rs::get_id_by_name(random_pokemon.get(), None).to_string()
+pub fn Home() -> Element {
+    let mut random_pokemon = use_signal(|| pokemon_rs::random(None).to_string());
+    let mut random_pokemon_id = use_signal(|| {
+        pokemon_rs::get_id_by_name(&random_pokemon.read(), None).to_string()
     });
-    let id_str = format!("{:03}", random_pokemon_id.get().parse::<u32>().unwrap_or(0));
+    let id_str = format!("{:03}", random_pokemon_id.read().parse::<u32>().unwrap_or(0));
     let pokemon_url = format!(
         "https://pokeapi.co/api/v2/pokemon/{}",
-        random_pokemon.get().to_lowercase()
+        random_pokemon.read().to_lowercase()
     );
     let species_url = format!(
         "https://pokeapi.co/api/v2/pokemon-species/{}",
-        random_pokemon.get().to_lowercase()
+        random_pokemon.read().to_lowercase()
     );
 
     let pokemon_url_string = pokemon_url.clone();
 
-    let pokemon_data = use_future(cx, (), |_| async move {
-        reqwest::get(&pokemon_url).await?.json::<Pokemon>().await
+    let pokemon_data = use_resource(move || {
+        let url = pokemon_url.clone();
+        async move {
+            reqwest::get(&url).await?.json::<Pokemon>().await
+        }
     });
 
-    let species_data = use_future(cx, (), |_| async move {
-        reqwest::get(&species_url)
-            .await?
-            .json::<PokemonSpecies>()
-            .await
+    let species_data = use_resource(move || {
+        let url = species_url.clone();
+        async move {
+            reqwest::get(&url)
+                .await?
+                .json::<PokemonSpecies>()
+                .await
+        }
     });
-    cx.render(match (pokemon_data.value(), species_data.value()) {
+    
+    match (pokemon_data.read().as_ref(), species_data.read().as_ref()) {
     (Some(Ok(pokemon)), Some(Ok(species))) => {
         let english_flavor_texts: Vec<_> = species.flavor_text_entries
             .iter()
@@ -55,7 +62,7 @@ pub fn Home(cx: Scope) -> Element {
                 h2 {
                     class: "text-2xl text-center",
                     "Random Pokémon:"
-                    strong { format!(" {}", random_pokemon.get()) }
+                    strong { "{random_pokemon.read()}" }
                 },
                 div {
                     class: "flex justify-center",
@@ -70,12 +77,12 @@ pub fn Home(cx: Scope) -> Element {
                     div {
                         class: "text-center",
                         strong { "Height: " }
-                        format!("{} m", pokemon.height as f32 / 10.0)
+                        "{pokemon.height as f32 / 10.0} m"
                     },
                     div {
                         class: "text-center",
                         strong { "Weight: " }
-                        format!("{} kg", pokemon.weight as f32 / 10.0)
+                        "{pokemon.weight as f32 / 10.0} kg"
                     }
                 },
                 // Displaying types
@@ -84,8 +91,8 @@ pub fn Home(cx: Scope) -> Element {
                     for (index, pokemon_type) in pokemon.types.iter().enumerate() {
                         div {
                             class: "text-center",
-                            strong { format!("Type {}: ", index + 1) }
-                            capitalize(&pokemon_type.r#type.name)
+                            strong { "Type {index + 1}: " }
+                            {capitalize(&pokemon_type.r#type.name)}
                         }
                     }
                 },
@@ -94,7 +101,7 @@ pub fn Home(cx: Scope) -> Element {
                         div {
                             class: "text-center",
                             strong { "Abilities: " }
-                            abilities_string
+                            {abilities_string}
                         }
                 },
                 div {
@@ -103,11 +110,11 @@ pub fn Home(cx: Scope) -> Element {
                             class: "bg-gray-100 m-4 p-4 rounded shadow",
                             h3 {
                                 class: "text-lg font-bold",
-                                format!("Version: {}", entry.version.name)
+                                "Version: {entry.version.name}"
                             },
                             p {
                                 class: "text-gray-700",
-                                entry.flavor_text.clone()
+                                {entry.flavor_text.clone()}
                             }
                         }
                     }
@@ -119,14 +126,14 @@ pub fn Home(cx: Scope) -> Element {
     (Some(Err(_)), _) | (_, Some(Err(_))) => rsx! {
         div {
             "Failed to fetch Pokémon data."
-            pokemon_url_string
+            p { "{pokemon_url_string}" }
         }
     },
     (_, _) => rsx! {
         div {
             "Loading Pokémon data..."
-            pokemon_url_string
+            p { "{pokemon_url_string}" }
         }
     },
-})
+}
 }

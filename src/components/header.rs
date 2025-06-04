@@ -2,9 +2,9 @@ use dioxus::prelude::*;
 use dioxus_router::prelude::*;
 
 // Header component
-#[inline_props]
-pub fn Header(cx: Scope, name: String) -> Element {
-    cx.render(rsx! {
+#[component]
+pub fn Header(name: String) -> Element {
+    rsx! {
         header {
             class: "flex justify-between items-center p-8",
             h1 {
@@ -21,5 +21,5 @@ pub fn Header(cx: Scope, name: String) -> Element {
                 }
             }
         }
-    })
+    }
 }

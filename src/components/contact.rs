@@ -3,8 +3,8 @@ use super::header::Header;
 use dioxus::prelude::*;
 
 // Contact component
-pub fn Contact(cx: Scope) -> Element {
-    cx.render(rsx! {
+pub fn Contact() -> Element {
+    rsx! {
         div {
             class: "relative flex flex-col min-h-screen",
             Header {name:"Contact".into()},
@@ -25,5 +25,5 @@ pub fn Contact(cx: Scope) -> Element {
             },
             About {},
         }
-    })
+    }
 }

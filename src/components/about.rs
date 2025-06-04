@@ -4,8 +4,8 @@ use dioxus::prelude::*;
 const GITHUB_IMG: &str = wasm_or_else("github.svg", "public/github.svg");
 
 // About component
-pub fn About(cx: Scope) -> Element {
-    cx.render(rsx! {
+pub fn About() -> Element {
+    rsx! {
         p {
             class: "mt-auto p-8 flex items-center italic text-xs",
             a {
@@ -18,7 +18,7 @@ pub fn About(cx: Scope) -> Element {
             }
             " An Open Source project to create a Pokédex using Rust & Dioxus."
         }
-    })
+    }
 }
 
 // Utility function

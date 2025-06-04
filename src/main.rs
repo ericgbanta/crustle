@@ -26,18 +26,18 @@ pub enum Route {
 
 // Entry point
 fn main() {
-    dioxus_web::launch(App);
+    dioxus::launch(App);
 }
 
-fn App(cx: Scope) -> Element {
-    render! {
+fn App() -> Element {
+    rsx! {
         Router::<Route> { }
     }
 }
 
-#[inline_props]
-fn PageNotFound(cx: Scope, route: Vec<String>) -> Element {
-    render! {
+#[component]
+fn PageNotFound(route: Vec<String>) -> Element {
+    rsx! {
         h1 { "Page not found" }
         p { "We are terribly sorry, but the page you requested doesn't exist." }
         pre {
