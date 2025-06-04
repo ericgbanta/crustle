@@ -1,12 +1,12 @@
 # crustle
 
-Crustle is a Bug/Rock-type Pokémon introduced in Generation V. It is also this project, which is named after the crab pokemon to honor Rustaceans that also enjoy pocket monsters. This is a simple Pokédex app built using [Rust](https://www.rust-lang.org/), [Tailwind](https://tailwindcss.com/) & [Dioxus](https://dioxuslabs.com/) (not to be confused with [Deoxys](https://bulbapedia.bulbagarden.net/wiki/Deoxys_(Pok%C3%A9mon))).
+Crustle is a Bug/Rock-type Pokémon introduced in Generation V. It is also this project, which is named after the crab pokemon to honor Rustaceans that also enjoy pocket monsters. This is a simple Pokédex app built using [Rust](https://www.rust-lang.org/), [Tailwind](https://tailwindcss.com/) & [Dioxus 0.6.1](https://dioxuslabs.com/) (not to be confused with [Deoxys](https://bulbapedia.bulbagarden.net/wiki/Deoxys_(Pok%C3%A9mon))).
 
 ### Prerequisites
 
 1. [Install rust using rustup](https://www.rust-lang.org/tools/install)
-2. [Install dioxus labs crate](https://dioxuslabs.com/learn/0.4/CLI/installation)
-3. [Setup tailwind following these instructions](https://dioxuslabs.com/learn/0.4/cookbook/tailwind)
+2. [Install dioxus labs crate](https://dioxuslabs.com/learn/0.6/getting_started)
+3. [Setup tailwind following these instructions](https://dioxuslabs.com/learn/0.6/cookbook/tailwind)
 
 ### Linting with Clippy
 This project uses clippy for [linting](https://github.com/rust-lang/rust-clippy). While CI/CD will run `cargo build` and `cargo test` commands, clippy linting is not required. If you want to lint using clippy, follow these steps:

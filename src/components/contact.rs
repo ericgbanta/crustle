@@ -7,7 +7,7 @@ pub fn Contact() -> Element {
     rsx! {
         div {
             class: "relative flex flex-col min-h-screen",
-            Header {name:"Contact".into()},
+            Header {name:"Contact".to_string()},
             div {
                 class: "text-center",
                 a {

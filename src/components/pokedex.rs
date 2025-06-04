@@ -11,18 +11,15 @@ const POKEMON_URL: &str = "https://pokeapi.co/api/v2/pokemon/";
 const SPECIES_URL: &str = "https://pokeapi.co/api/v2/pokemon-species/";
 
 pub fn Pokedex() -> Element {
-    let mut pokemon_names = use_signal(|| pokemon_rs::get_all(None));
+    let pokemon_names = use_signal(|| pokemon_rs::get_all(None));
     let mut selected_pokemon = use_signal(|| String::from(""));
     let pokemon_url = format!("{}{}", POKEMON_URL, selected_pokemon.read());
     let species_url = format!("{}{}", SPECIES_URL, selected_pokemon.read());
-    let "{pokemon_url_string}" = pokemon_url.clone();
+    let pokemon_url_string = pokemon_url.clone();
     
     let pokemon_data = use_resource(move || {
         let url = pokemon_url.clone();
         async move {
-            if url.ends_with('/') {
-                return Err(reqwest::Error::from(std::io::Error::new(std::io::ErrorKind::InvalidInput, "No pokemon selected")));
-            }
             reqwest::get(&url).await?.json::<Pokemon>().await
         }
     });
@@ -30,9 +27,6 @@ pub fn Pokedex() -> Element {
     let species_data = use_resource(move || {
         let url = species_url.clone();
         async move {
-            if url.ends_with('/') {
-                return Err(reqwest::Error::from(std::io::Error::new(std::io::ErrorKind::InvalidInput, "No pokemon selected")));
-            }
             reqwest::get(&url)
                 .await?
                 .json::<PokemonSpecies>()
@@ -44,7 +38,7 @@ pub fn Pokedex() -> Element {
         return rsx! {
             div {
                 class: "relative flex flex-col min-h-screen",
-                Header {name:"Pokédex".into()},
+                Header {name:"Pokédex".to_string()},
                 br {}
                 br {}
                 div {
@@ -74,23 +68,25 @@ pub fn Pokedex() -> Element {
                 },
                 About {},
             }
-        }}
+        }; // End of first if
     } else {
-        match (pokemon_data.read().as_ref(), species_data.read().as_ref()) {
+        let pokemon_read = pokemon_data.read();
+        let species_read = species_data.read();
+        match (pokemon_read.as_ref(), species_read.as_ref()) {
     (Some(Ok(pokemon)), Some(Ok(species))) => {
         let english_flavor_texts: Vec<_> = species.flavor_text_entries
             .iter()
             .filter(|entry| entry.language.name == "en")
             .collect();
 
-        let {abilities_string} = pokemon.abilities.iter().map(|pokemon_ability| {
+        let abilities_string = pokemon.abilities.iter().map(|pokemon_ability| {
             capitalize(&pokemon_ability.ability.name)
         }).collect::<Vec<String>>().join(", ");
 
         rsx! {
             div {
                 class: "relative flex flex-col min-h-screen",
-                Header {name:"Pokédex".into()},
+                Header {name:"Pokédex".to_string()},
                 br {}
                 br {}
                 div {
@@ -191,3 +187,4 @@ pub fn Pokedex() -> Element {
     },
     }
 }
+    }

@@ -9,8 +9,8 @@ use pokemon_rs;
 
 // Home component
 pub fn Home() -> Element {
-    let mut random_pokemon = use_signal(|| pokemon_rs::random(None).to_string());
-    let mut random_pokemon_id = use_signal(|| {
+    let random_pokemon = use_signal(|| pokemon_rs::random(None).to_string());
+    let random_pokemon_id = use_signal(|| {
         pokemon_rs::get_id_by_name(&random_pokemon.read(), None).to_string()
     });
     let id_str = format!("{:03}", random_pokemon_id.read().parse::<u32>().unwrap_or(0));
@@ -42,7 +42,9 @@ pub fn Home() -> Element {
         }
     });
     
-    match (pokemon_data.read().as_ref(), species_data.read().as_ref()) {
+    let pokemon_read = pokemon_data.read();
+    let species_read = species_data.read();
+    match (pokemon_read.as_ref(), species_read.as_ref()) {
     (Some(Ok(pokemon)), Some(Ok(species))) => {
         let english_flavor_texts: Vec<_> = species.flavor_text_entries
             .iter()
@@ -56,7 +58,7 @@ pub fn Home() -> Element {
         rsx! {
             div {
                 class: "relative flex flex-col min-h-screen",
-                Header {name:"crustle".into()},
+                Header {name:"crustle".to_string()},
                 br {}
                 br {}
                 h2 {
