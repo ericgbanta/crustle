@@ -1,5 +1,5 @@
 /target
 /dist
 .env
-assets/tailwind.css
+src/output.css
 node_modules/
