@@ -5,8 +5,8 @@ Crustle is a Bug/Rock-type Pokémon introduced in Generation V. It is also this 
 ### Prerequisites
 
 1. [Install rust using rustup](https://www.rust-lang.org/tools/install)
-2. [Install dioxus labs crate](https://dioxuslabs.com/learn/0.4/CLI/installation)
-3. [Setup tailwind following these instructions](https://dioxuslabs.com/learn/0.4/cookbook/tailwind)
+2. Install the Dioxus CLI: `cargo install dioxus-cli`
+3. [Setup tailwind following these instructions](https://dioxuslabs.com/learn/0.6/cookbook/tailwind)
 
 ### Linting with Clippy
 This project uses clippy for [linting](https://github.com/rust-lang/rust-clippy). While CI/CD will run `cargo build` and `cargo test` commands, clippy linting is not required. If you want to lint using clippy, follow these steps:
@@ -18,7 +18,7 @@ This project uses clippy for [linting](https://github.com/rust-lang/rust-clippy)
 ### Running the App
 To run the app on your local machine, you can run this command:
 
-`dx serve --port 5001 --hot-reload`
+`dx serve --port 5001 --hot-reload true`
 
 If you've made any changes to CSS or plan to make changes to CSS:
 

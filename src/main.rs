@@ -6,9 +6,7 @@ use components::contact::Contact;
 use components::home::Home;
 use components::pokedex::Pokedex;
 use dioxus::prelude::*;
-use dioxus_router::prelude::*;
 
-// Routes
 #[rustfmt::skip]
 #[derive(Clone, Debug, PartialEq, Routable)]
 pub enum Route {
@@ -24,20 +22,19 @@ pub enum Route {
     },
 }
 
-// Entry point
 fn main() {
-    dioxus_web::launch(App);
+    dioxus::launch(App);
 }
 
-fn App(cx: Scope) -> Element {
-    render! {
-        Router::<Route> { }
+fn App() -> Element {
+    rsx! {
+        Router::<Route> {}
     }
 }
 
-#[inline_props]
-fn PageNotFound(cx: Scope, route: Vec<String>) -> Element {
-    render! {
+#[component]
+fn PageNotFound(route: Vec<String>) -> Element {
+    rsx! {
         h1 { "Page not found" }
         p { "We are terribly sorry, but the page you requested doesn't exist." }
         pre {
