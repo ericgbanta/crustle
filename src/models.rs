@@ -1,6 +1,6 @@
 use serde_derive::Deserialize;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct Pokemon {
     pub name: String,
     pub id: i32,
@@ -12,42 +12,42 @@ pub struct Pokemon {
     pub sprites: PokemonSprites,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct PokemonSpecies {
     pub flavor_text_entries: Vec<FlavorTextEntry>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct FlavorTextEntry {
     pub flavor_text: String,
     pub language: Language,
     pub version: Version,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct Language {
     pub name: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct Version {
     pub name: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct PokemonAbility {
     pub slot: i32,
     pub is_hidden: bool,
     pub ability: NamedApiResource,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct PokemonType {
     pub slot: i32,
     pub r#type: NamedApiResource,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct PokemonSprites {
     pub front_default: Option<String>,
     pub front_shiny: Option<String>,
@@ -59,7 +59,7 @@ pub struct PokemonSprites {
     pub back_shiny_female: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct NamedApiResource {
     pub name: String,
     pub url: String,

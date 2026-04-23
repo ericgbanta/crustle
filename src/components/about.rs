@@ -1,11 +1,9 @@
 use dioxus::prelude::*;
 
-// Constants
-const GITHUB_IMG: &str = wasm_or_else("github.svg", "public/github.svg");
+const GITHUB_ICON: Asset = asset!("/assets/github.svg");
 
-// About component
-pub fn About(cx: Scope) -> Element {
-    cx.render(rsx! {
+pub fn About() -> Element {
+    rsx! {
         p {
             class: "mt-auto p-8 flex items-center italic text-xs",
             a {
@@ -13,19 +11,10 @@ pub fn About(cx: Scope) -> Element {
                 target: "_blank",
                 img {
                     class: "w-4 sm:w-8 align-middle mr-2",
-                    src: GITHUB_IMG,
+                    src: GITHUB_ICON,
                 }
             }
             " An Open Source project to create a Pokédex using Rust & Dioxus."
         }
-    })
-}
-
-// Utility function
-const fn wasm_or_else<'a, T: ?Sized>(then: &'a T, _else: &'a T) -> &'a T {
-    if cfg!(target_family = "wasm") {
-        then
-    } else {
-        _else
     }
 }

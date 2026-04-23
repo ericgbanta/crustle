@@ -5,128 +5,147 @@ use super::about::About;
 use super::header::Header;
 use super::utilities::*;
 use dioxus::prelude::*;
-use pokemon_rs;
 
-// Home component
-pub fn Home(cx: Scope) -> Element {
-    let random_pokemon = use_state(cx, || pokemon_rs::random(None).to_string());
-    let random_pokemon_id = use_state(cx, || {
-        pokemon_rs::get_id_by_name(random_pokemon.get(), None).to_string()
-    });
-    let id_str = format!("{:03}", random_pokemon_id.get().parse::<u32>().unwrap_or(0));
-    let pokemon_url = format!(
-        "https://pokeapi.co/api/v2/pokemon/{}",
-        random_pokemon.get().to_lowercase()
-    );
-    let species_url = format!(
-        "https://pokeapi.co/api/v2/pokemon-species/{}",
-        random_pokemon.get().to_lowercase()
-    );
+const POKEMON_URL: &str = "https://pokeapi.co/api/v2/pokemon/";
+const SPECIES_URL: &str = "https://pokeapi.co/api/v2/pokemon-species/";
 
-    let pokemon_url_string = pokemon_url.clone();
+pub fn Home() -> Element {
+    let random_pokemon = use_memo(|| pokemon_rs::random(None).to_string());
 
-    let pokemon_data = use_future(cx, (), |_| async move {
-        reqwest::get(&pokemon_url).await?.json::<Pokemon>().await
+    let pokemon_data = use_resource(move || {
+        let name = random_pokemon().to_lowercase();
+        async move {
+            reqwest::get(format!("{}{}", POKEMON_URL, name))
+                .await?
+                .json::<Pokemon>()
+                .await
+        }
     });
 
-    let species_data = use_future(cx, (), |_| async move {
-        reqwest::get(&species_url)
-            .await?
-            .json::<PokemonSpecies>()
-            .await
+    let species_data = use_resource(move || {
+        let name = random_pokemon().to_lowercase();
+        async move {
+            reqwest::get(format!("{}{}", SPECIES_URL, name))
+                .await?
+                .json::<PokemonSpecies>()
+                .await
+        }
     });
-    cx.render(match (pokemon_data.value(), species_data.value()) {
-    (Some(Ok(pokemon)), Some(Ok(species))) => {
-        let english_flavor_texts: Vec<_> = species.flavor_text_entries
-            .iter()
-            .filter(|entry| entry.language.name == "en")
-            .collect();
 
-        let abilities_string = pokemon.abilities.iter().map(|pokemon_ability| {
-            capitalize(&pokemon_ability.ability.name)
-        }).collect::<Vec<String>>().join(", ");
+    let pokemon = {
+        let guard = pokemon_data.read();
+        match &*guard {
+            Some(Ok(p)) => Ok(Some(p.clone())),
+            Some(Err(e)) => Err(e.to_string()),
+            None => Ok(None),
+        }
+    };
 
-        rsx! {
-            div {
-                class: "relative flex flex-col min-h-screen",
-                Header {name:"crustle".into()},
-                br {}
-                br {}
-                h2 {
-                    class: "text-2xl text-center",
-                    "Random Pokémon:"
-                    strong { format!(" {}", random_pokemon.get()) }
-                },
+    let species = {
+        let guard = species_data.read();
+        match &*guard {
+            Some(Ok(s)) => Ok(Some(s.clone())),
+            Some(Err(e)) => Err(e.to_string()),
+            None => Ok(None),
+        }
+    };
+
+    match (pokemon, species) {
+        (Err(e), _) | (_, Err(e)) => rsx! {
+            div { "Failed to fetch Pokémon data: {e}" }
+        },
+        (Ok(Some(pokemon)), Ok(Some(species))) => {
+            let english_flavor_texts: Vec<_> = species
+                .flavor_text_entries
+                .iter()
+                .filter(|e| e.language.name == "en")
+                .cloned()
+                .collect();
+
+            let abilities_string = pokemon
+                .abilities
+                .iter()
+                .map(|pa| capitalize(&pa.ability.name))
+                .collect::<Vec<String>>()
+                .join(", ");
+
+            let sprite_url = pokemon.sprites.front_default.clone().unwrap_or_default();
+            let height = format!("{} m", pokemon.height as f32 / 10.0);
+            let weight = format!("{} kg", pokemon.weight as f32 / 10.0);
+            let name = capitalize(&pokemon.name);
+            let types = pokemon.types.clone();
+
+            rsx! {
                 div {
-                    class: "flex justify-center",
-                    img {
-                        style: "max-width: 500px; max-height: 500px; margin-top: 20px;",
-                        src: "https://raw.githubusercontent.com/HybridShivam/Pokemon/master/assets/images/{id_str}.png",
+                    class: "relative flex flex-col min-h-screen",
+                    Header { name: "crustle".to_string() }
+                    br {}
+                    br {}
+                    h2 {
+                        class: "text-2xl text-center",
+                        "Random Pokémon: "
+                        strong { "{name}" }
                     }
-                },
-                br {}
-                div {
-                    class: "flex justify-center space-x-10",
                     div {
-                        class: "text-center",
-                        strong { "Height: " }
-                        format!("{} m", pokemon.height as f32 / 10.0)
-                    },
-                    div {
-                        class: "text-center",
-                        strong { "Weight: " }
-                        format!("{} kg", pokemon.weight as f32 / 10.0)
-                    }
-                },
-                // Displaying types
-                div {
-                    class: "flex justify-center space-x-10",
-                    for (index, pokemon_type) in pokemon.types.iter().enumerate() {
-                        div {
-                            class: "text-center",
-                            strong { format!("Type {}: ", index + 1) }
-                            capitalize(&pokemon_type.r#type.name)
+                        class: "flex justify-center",
+                        img {
+                            style: "max-width: 500px; max-height: 500px; margin-top: 20px;",
+                            src: "{sprite_url}",
                         }
                     }
-                },
-                div {
+                    br {}
+                    div {
+                        class: "flex justify-center space-x-10",
+                        div {
+                            class: "text-center",
+                            strong { "Height: " }
+                            "{height}"
+                        }
+                        div {
+                            class: "text-center",
+                            strong { "Weight: " }
+                            "{weight}"
+                        }
+                    }
+                    div {
+                        class: "flex justify-center space-x-10",
+                        for (index, pokemon_type) in types.iter().enumerate() {
+                            div {
+                                class: "text-center",
+                                strong { "Type {index + 1}: " }
+                                {capitalize(&pokemon_type.r#type.name)}
+                            }
+                        }
+                    }
+                    div {
                         class: "flex justify-center",
                         div {
                             class: "text-center",
                             strong { "Abilities: " }
-                            abilities_string
+                            "{abilities_string}"
                         }
-                },
-                div {
-                    for entry in english_flavor_texts {
-                        div {
-                            class: "bg-gray-100 m-4 p-4 rounded shadow",
-                            h3 {
-                                class: "text-lg font-bold",
-                                format!("Version: {}", entry.version.name)
-                            },
-                            p {
-                                class: "text-gray-700",
-                                entry.flavor_text.clone()
+                    }
+                    div {
+                        for entry in english_flavor_texts {
+                            div {
+                                class: "bg-gray-100 m-4 p-4 rounded shadow",
+                                h3 {
+                                    class: "text-lg font-bold",
+                                    "Version: {entry.version.name}"
+                                }
+                                p {
+                                    class: "text-gray-700",
+                                    "{entry.flavor_text}"
+                                }
                             }
                         }
                     }
-                },
-                About {},
+                    About {}
+                }
             }
         }
-    },
-    (Some(Err(_)), _) | (_, Some(Err(_))) => rsx! {
-        div {
-            "Failed to fetch Pokémon data."
-            pokemon_url_string
-        }
-    },
-    (_, _) => rsx! {
-        div {
-            "Loading Pokémon data..."
-            pokemon_url_string
-        }
-    },
-})
+        _ => rsx! {
+            div { "Loading Pokémon data..." }
+        },
+    }
 }

@@ -1,0 +1,24 @@
+{
+  "name": "crustle",
+  "version": "1.0.0",
+  "description": "Crustle is a Bug/Rock-type Pokémon introduced in Generation V. It is also this project, which is named after the crab pokemon to honor Rustaceans that also enjoy pocket monsters. This is a simple Pokédex app built using [Rust](https://www.rust-lang.org/), [Tailwind](https://tailwindcss.com/) & [Dioxus](https://dioxuslabs.com/) (not to be confused with [Deoxys](https://bulbapedia.bulbagarden.net/wiki/Deoxys_(Pok%C3%A9mon))).",
+  "main": "tailwind.config.js",
+  "scripts": {
+    "css": "tailwindcss -i ./tailwind.css -o ./assets/tailwind.css",
+    "css:watch": "tailwindcss -i ./tailwind.css -o ./assets/tailwind.css --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ericgbanta/crustle.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ericgbanta/crustle/issues"
+  },
+  "homepage": "https://github.com/ericgbanta/crustle#readme",
+  "dependencies": {
+    "tailwindcss": "^3.4.19"
+  }
+}
