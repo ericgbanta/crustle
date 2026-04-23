@@ -69,10 +69,10 @@ pub fn Home() -> Element {
                 .collect::<Vec<String>>()
                 .join(", ");
 
-            let id_str = format!("{:03}", pokemon.id);
+            let sprite_url = pokemon.sprites.front_default.clone().unwrap_or_default();
             let height = format!("{} m", pokemon.height as f32 / 10.0);
             let weight = format!("{} kg", pokemon.weight as f32 / 10.0);
-            let name = pokemon.name.clone();
+            let name = capitalize(&pokemon.name);
             let types = pokemon.types.clone();
 
             rsx! {
@@ -90,7 +90,7 @@ pub fn Home() -> Element {
                         class: "flex justify-center",
                         img {
                             style: "max-width: 500px; max-height: 500px; margin-top: 20px;",
-                            src: "https://raw.githubusercontent.com/HybridShivam/Pokemon/master/assets/images/{id_str}.png",
+                            src: "{sprite_url}",
                         }
                     }
                     br {}
