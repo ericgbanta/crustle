@@ -7,6 +7,8 @@ use components::home::Home;
 use components::pokedex::Pokedex;
 use dioxus::prelude::*;
 
+const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
+
 #[rustfmt::skip]
 #[derive(Clone, Debug, PartialEq, Routable)]
 pub enum Route {
@@ -28,6 +30,7 @@ fn main() {
 
 fn App() -> Element {
     rsx! {
+        document::Stylesheet { href: TAILWIND_CSS }
         Router::<Route> {}
     }
 }

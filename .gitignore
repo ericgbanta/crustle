@@ -1,4 +1,5 @@
 /target
 /dist
 .env
-public/tailwind.css
+assets/tailwind.css
+node_modules/
