@@ -1,12 +1,11 @@
-use super::about::About;
-use super::header::Header;
+use crate::components::layout::PageLayout;
 use dioxus::prelude::*;
 
+#[component]
 pub fn Contact() -> Element {
     rsx! {
-        div {
-            class: "relative flex flex-col min-h-screen",
-            Header { name: "Contact".to_string() }
+        PageLayout {
+            title: "Contact",
             div {
                 class: "text-center",
                 a {
@@ -21,7 +20,6 @@ pub fn Contact() -> Element {
                     "File an issue"
                 }
             }
-            About {}
         }
     }
 }

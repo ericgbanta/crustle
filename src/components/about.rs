@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 
 const GITHUB_ICON: Asset = asset!("/assets/github.svg");
 
+#[component]
 pub fn About() -> Element {
     rsx! {
         p {

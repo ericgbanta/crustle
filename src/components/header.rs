@@ -2,13 +2,13 @@ use crate::Route;
 use dioxus::prelude::*;
 
 #[component]
-pub fn Header(name: String) -> Element {
+pub fn Header(title: String) -> Element {
     rsx! {
         header {
             class: "flex justify-between items-center p-8",
             h1 {
                 class: "text-4xl",
-                "{name}"
+                "{title}"
             }
             div {
                 class: "flex items-center",

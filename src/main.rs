@@ -1,5 +1,7 @@
-#![allow(non_snake_case)]
+mod api;
 mod components;
+mod dex;
+mod format;
 mod models;
 
 use components::contact::Contact;
@@ -28,6 +30,7 @@ fn main() {
     dioxus::launch(App);
 }
 
+#[component]
 fn App() -> Element {
     rsx! {
         document::Stylesheet { href: TAILWIND_CSS }
@@ -41,7 +44,7 @@ fn PageNotFound(route: Vec<String>) -> Element {
         h1 { "Page not found" }
         p { "We are terribly sorry, but the page you requested doesn't exist." }
         pre {
-            color: "red",
+            class: "text-[red]",
             "log:\nattempted to navigate to: {route:?}"
         }
     }

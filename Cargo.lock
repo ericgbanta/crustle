@@ -497,10 +497,12 @@ name = "crustle"
 version = "0.1.0"
 dependencies = [
  "dioxus",
+ "futures-util",
  "getrandom 0.2.17",
  "pokemon-rs",
  "reqwest 0.13.5",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
