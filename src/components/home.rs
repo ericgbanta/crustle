@@ -128,7 +128,7 @@ pub fn Home() -> Element {
                     div {
                         for entry in english_flavor_texts {
                             div {
-                                class: "bg-gray-100 m-4 p-4 rounded shadow",
+                                class: "bg-gray-100 m-4 p-4 rounded-sm shadow-sm",
                                 h3 {
                                     class: "text-lg font-bold",
                                     "Version: {entry.version.name}"

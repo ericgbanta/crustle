@@ -1,4 +1,7 @@
-use serde_derive::Deserialize;
+// These structs mirror the PokeAPI response shape; not every field is rendered yet.
+#![allow(dead_code)]
+
+use serde::Deserialize;
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct Pokemon {

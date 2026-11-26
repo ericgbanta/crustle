@@ -73,13 +73,13 @@ pub fn Pokedex() -> Element {
             div {
                 class: "flex justify-center my-8 mx-8",
                 div {
-                    class: "flex items-center border p-2 rounded",
+                    class: "flex items-center border border-gray-200 p-2 rounded-sm",
                     span {
                         class: "mr-4 font-bold",
                         "Select a Pokémon:"
                     }
                     select {
-                        class: "border rounded p-2 w-full text-lg",
+                        class: "border border-gray-200 rounded-sm p-2 w-full text-lg",
                         onchange: move |event| {
                             let val = event.value().to_lowercase();
                             selected_pokemon.set(val);
@@ -164,7 +164,7 @@ pub fn Pokedex() -> Element {
                         div {
                             for entry in english_flavor_texts {
                                 div {
-                                    class: "bg-gray-100 m-4 p-4 rounded shadow",
+                                    class: "bg-gray-100 m-4 p-4 rounded-sm shadow-sm",
                                     h3 {
                                         class: "text-lg font-bold",
                                         "Version: {entry.version.name}"

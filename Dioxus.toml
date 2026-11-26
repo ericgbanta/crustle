@@ -1,6 +1,5 @@
 [application]
 name = "crustle"
-default_platform = "web"
 
 [web.app]
 title = "crustle | 💖"
