@@ -3,5 +3,8 @@ pub mod contact;
 pub mod header;
 pub mod home;
 pub mod layout;
+pub mod not_found;
 pub mod pokedex;
 pub mod pokemon_details;
+pub mod pokemon_picker;
+pub mod type_badge;

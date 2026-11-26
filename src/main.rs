@@ -3,9 +3,11 @@ mod components;
 mod dex;
 mod format;
 mod models;
+mod search;
 
 use components::contact::Contact;
 use components::home::Home;
+use components::not_found::PageNotFound;
 use components::pokedex::Pokedex;
 use dioxus::prelude::*;
 
@@ -35,17 +37,5 @@ fn App() -> Element {
     rsx! {
         document::Stylesheet { href: TAILWIND_CSS }
         Router::<Route> {}
-    }
-}
-
-#[component]
-fn PageNotFound(route: Vec<String>) -> Element {
-    rsx! {
-        h1 { "Page not found" }
-        p { "We are terribly sorry, but the page you requested doesn't exist." }
-        pre {
-            class: "text-[red]",
-            "log:\nattempted to navigate to: {route:?}"
-        }
     }
 }

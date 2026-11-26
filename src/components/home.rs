@@ -9,15 +9,9 @@ pub fn Home() -> Element {
 
     rsx! {
         PageLayout {
-            title: "crustle",
-            br {}
-            br {}
-            h2 {
-                class: "text-2xl text-center",
-                "Random Pokémon: "
-                strong { "{pokemon.name}" }
-            }
-            PokemonDetails { id: pokemon.id, sprites: SpriteLayout::Large }
+            title: "Random Pokémon",
+            intro: "Reload the page to meet another one.",
+            PokemonDetails { entry: pokemon, sprites: SpriteLayout::Large }
         }
     }
 }

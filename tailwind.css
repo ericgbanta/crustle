@@ -1,3 +1,82 @@
 @import "tailwindcss";
 
 @source "./src/**/*.{rs,html,css}";
+
+/*
+ * Semantic colors. The light values live in the theme; the dark values override the
+ * same variables below, so `bg-surface`, `text-muted` and friends follow the system
+ * color scheme without a `dark:` variant at every use.
+ */
+@theme {
+  --color-page: #fafaf9;
+  --color-surface: #ffffff;
+  --color-sunken: #f5f5f4;
+  --color-line: #e7e5e4;
+  --color-control: #78716c;
+  --color-ink: #1c1917;
+  --color-muted: #57534e;
+  --color-accent: #c2410c;
+  --color-accent-strong: #9a3412;
+  --color-accent-soft: #ffedd5;
+  --color-danger: #b91c1c;
+  --color-danger-soft: #fef2f2;
+
+  /* Pokémon types. These are the same in both color schemes. */
+  --color-type-normal: #a8a77a;
+  --color-type-fire: #ee8130;
+  --color-type-water: #6390f0;
+  --color-type-electric: #f7d02c;
+  --color-type-grass: #7ac74c;
+  --color-type-ice: #96d9d6;
+  --color-type-fighting: #c22e28;
+  --color-type-poison: #a33ea1;
+  --color-type-ground: #e2bf65;
+  --color-type-flying: #a98ff3;
+  --color-type-psychic: #f95587;
+  --color-type-bug: #a6b91a;
+  --color-type-rock: #b6a136;
+  --color-type-ghost: #735797;
+  --color-type-dragon: #6f35fc;
+  --color-type-dark: #705746;
+  --color-type-steel: #b7b7ce;
+  --color-type-fairy: #d685ad;
+}
+
+@layer base {
+  :root {
+    /* Lets the browser theme native controls, scrollbars and autofill to match. */
+    color-scheme: light dark;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-page: #0c0a09;
+      --color-surface: #1c1917;
+      --color-sunken: #151312;
+      --color-line: #2e2a27;
+      --color-control: #8a827c;
+      --color-ink: #f5f5f4;
+      --color-muted: #a8a29e;
+      --color-accent: #fb923c;
+      --color-accent-strong: #fdba74;
+      --color-accent-soft: #431407;
+      --color-danger: #fca5a5;
+      --color-danger-soft: #2a1110;
+    }
+  }
+
+  body {
+    background-color: var(--color-page);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+/* Sprites are small pixel art: scale them up with hard edges instead of smoothing. */
+@utility pixelated {
+  image-rendering: pixelated;
+}

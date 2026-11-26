@@ -1,112 +1,190 @@
-use crate::api;
-use crate::format::{capitalize, format_height, format_weight};
+use crate::api::{self, ApiError};
+use crate::components::type_badge::TypeBadge;
+use crate::dex::DexEntry;
+use crate::format::{
+    capitalize, dex_number, format_height, format_weight, title_case_slug, version_label,
+};
 use crate::models::{Pokemon, PokemonData};
 use dioxus::prelude::*;
 
-/// Which sprites the detail view shows, and how.
+/// Which images the detail view shows, and how.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum SpriteLayout {
-    /// The default sprite alone, at up to 500px.
+    /// One large picture: the official artwork, or the default sprite without it.
     Large,
-    /// The default and shiny sprites side by side at double size.
+    /// The default and shiny sprites side by side.
     DefaultAndShiny,
 }
 
-/// Loads and shows one Pokémon: sprites, height and weight, types, abilities and its
-/// English Pokédex entries. Refetches when `id` (a national Pokédex number) changes.
-#[component]
-pub fn PokemonDetails(id: ReadSignal<u32>, sprites: SpriteLayout) -> Element {
-    let data = use_resource(move || api::fetch_pokemon_data(id()));
-
-    match &*data.read() {
-        None => rsx! {
-            div {
-                class: "flex justify-center my-4",
-                "Loading Pokémon data..."
-            }
-        },
-        Some(Err(error)) => rsx! {
-            div { "Failed to fetch Pokémon data: {error}" }
-        },
-        Some(Ok(data)) => details(data, sprites),
-    }
+/// Where the request for one Pokémon stands.
+#[derive(Clone, Copy)]
+enum Fetch<'a> {
+    Loading,
+    Failed(&'a ApiError),
+    Ready(&'a PokemonData),
 }
 
-fn details(data: &PokemonData, sprite_layout: SpriteLayout) -> Element {
-    let pokemon = &data.pokemon;
-    let height = format_height(pokemon.height);
-    let weight = format_weight(pokemon.weight);
-    let abilities = ability_list(pokemon);
-    let front_default = pokemon.sprites.front_default();
-    let front_shiny = pokemon.sprites.front_shiny();
-    let stats_class = match sprite_layout {
-        SpriteLayout::Large => "flex justify-center space-x-10",
-        // Leaves room for the sprites, which are scaled past their layout box.
-        SpriteLayout::DefaultAndShiny => "flex justify-center space-x-10 mt-14",
+const SKELETON: &str = "animate-pulse rounded-md bg-line motion-reduce:animate-none";
+const LABEL: &str = "text-xs font-medium uppercase tracking-wide text-muted";
+
+/// Loads and shows one Pokémon: pictures, types, height, weight, abilities and its
+/// English Pokédex entries. Refetches when `entry` changes.
+#[component]
+pub fn PokemonDetails(entry: ReadSignal<DexEntry>, sprites: SpriteLayout) -> Element {
+    // The response is stored with the id it was requested for. While a new request is
+    // in flight the resource still holds the previous Pokémon's response, and the id
+    // is what tells the two apart.
+    let mut data = use_resource(move || async move {
+        let id = entry().id;
+        (id, api::fetch_pokemon_data(id).await)
+    });
+
+    let entry = entry();
+    let response = data.read();
+    let fetch = match &*response {
+        Some((id, Ok(data))) if *id == entry.id => Fetch::Ready(data),
+        Some((id, Err(error))) if *id == entry.id => Fetch::Failed(error),
+        _ => Fetch::Loading,
     };
 
     rsx! {
-        div {
-            class: "flex justify-center",
-            match sprite_layout {
-                SpriteLayout::Large => rsx! {
-                    if let Some(src) = front_default {
-                        img { class: "max-w-[500px] max-h-[500px] mt-5", src }
-                    }
-                },
-                SpriteLayout::DefaultAndShiny => rsx! {
-                    if let Some(src) = front_default {
-                        img { class: "scale-200 mt-5", src }
-                    }
-                    if let Some(src) = front_shiny {
-                        img { class: "scale-200 mt-5 ml-20", src }
-                    }
-                },
-            }
-        }
-        br {}
-        div {
-            class: stats_class,
-            div {
-                class: "text-center",
-                strong { "Height: " }
-                "{height}"
-            }
-            div {
-                class: "text-center",
-                strong { "Weight: " }
-                "{weight}"
-            }
-        }
-        div {
-            class: "flex justify-center space-x-10",
-            for (index, pokemon_type) in pokemon.types.iter().enumerate() {
+        article {
+            class: "overflow-hidden rounded-xl border border-line bg-surface",
+            aria_busy: matches!(fetch, Fetch::Loading),
+            if !matches!(fetch, Fetch::Failed(_)) {
                 div {
-                    class: "text-center",
-                    strong { "Type {index + 1}: " }
-                    {capitalize(&pokemon_type.r#type.name)}
+                    class: "flex justify-center gap-6 border-b border-line bg-sunken px-4 py-6 sm:gap-12",
+                    {pictures(entry, fetch, sprites)}
+                }
+            }
+            div {
+                class: "p-5 sm:p-6",
+                div {
+                    class: "flex flex-wrap items-end justify-between gap-x-6 gap-y-3",
+                    div {
+                        p { class: "font-mono text-sm text-muted", {dex_number(entry.id)} }
+                        h2 { class: "text-2xl font-semibold tracking-tight", "{entry.name}" }
+                    }
+                    match fetch {
+                        Fetch::Ready(data) => rsx! {
+                            ul {
+                                class: "flex flex-wrap gap-2",
+                                aria_label: "Types",
+                                for slot in &data.pokemon.types {
+                                    li {
+                                        key: "{slot.r#type.name}",
+                                        class: "flex",
+                                        TypeBadge { name: slot.r#type.name.clone() }
+                                    }
+                                }
+                            }
+                        },
+                        Fetch::Loading => rsx! {
+                            div { class: "h-6 w-28 {SKELETON}" }
+                        },
+                        Fetch::Failed(_) => rsx! {},
+                    }
+                }
+                match fetch {
+                    Fetch::Ready(data) => rsx! {
+                        {stats(&data.pokemon)}
+                        {pokedex_entries(data)}
+                    },
+                    Fetch::Loading => rsx! {
+                        p { class: "sr-only", role: "status", "Loading {entry.name}" }
+                        div {
+                            class: "mt-6 space-y-3 border-t border-line pt-5",
+                            aria_hidden: "true",
+                            div { class: "h-4 w-2/3 {SKELETON}" }
+                            div { class: "h-4 w-full {SKELETON}" }
+                            div { class: "h-4 w-5/6 {SKELETON}" }
+                            div { class: "h-4 w-1/2 {SKELETON}" }
+                        }
+                    },
+                    Fetch::Failed(error) => rsx! {
+                        div {
+                            class: "mt-6 rounded-lg border border-danger/40 bg-danger-soft p-4",
+                            role: "alert",
+                            h3 { class: "font-semibold text-danger", "Could not load {entry.name}" }
+                            p { class: "mt-1 text-sm break-words", {format!("{}.", capitalize(&error.to_string()))} }
+                            button {
+                                class: "mt-4 rounded-md border border-control bg-surface px-4 py-2 text-sm font-medium hover:bg-sunken",
+                                r#type: "button",
+                                onclick: move |_| data.restart(),
+                                "Try again"
+                            }
+                        }
+                    },
                 }
             }
         }
-        div {
-            class: "flex justify-center",
-            div {
-                class: "text-center",
-                strong { "Abilities: " }
-                "{abilities}"
+    }
+}
+
+/// The picture area. Every state fills the same boxes, so the card keeps its height
+/// while the data and then the images load.
+fn pictures(entry: DexEntry, fetch: Fetch, layout: SpriteLayout) -> Element {
+    let sprites = match fetch {
+        Fetch::Ready(data) => Some(&data.pokemon.sprites),
+        _ => None,
+    };
+    let name = entry.name;
+
+    match layout {
+        SpriteLayout::Large => {
+            let artwork = sprites.and_then(|sprites| sprites.official_artwork());
+            let sprite = sprites.and_then(|sprites| sprites.front_default());
+            rsx! {
+                div {
+                    class: "flex aspect-square w-full max-w-56 items-center justify-center sm:max-w-72",
+                    if let Some(src) = artwork {
+                        img {
+                            class: "size-full object-contain",
+                            src,
+                            alt: "Official artwork of {name}",
+                            width: "475",
+                            height: "475",
+                        }
+                    } else if let Some(src) = sprite {
+                        img {
+                            class: "pixelated size-full object-contain",
+                            src,
+                            alt: "{name} sprite",
+                            width: "96",
+                            height: "96",
+                        }
+                    } else {
+                        {picture_placeholder(sprites.is_some())}
+                    }
+                }
             }
         }
-        div {
-            for entry in &data.flavor_texts {
-                div {
-                    class: "bg-gray-100 m-4 p-4 rounded-sm shadow-sm",
-                    h3 {
-                        class: "text-lg font-bold",
-                        "Version: {entry.version}"
-                    }
-                    p {
-                        class: "text-gray-700",
-                        "{entry.text}"
+        SpriteLayout::DefaultAndShiny => {
+            let default = sprites.and_then(|sprites| sprites.front_default());
+            let shiny = sprites.and_then(|sprites| sprites.front_shiny());
+            rsx! {
+                for (label, alt, src) in [
+                    ("Default", format!("{name} sprite"), default),
+                    ("Shiny", format!("Shiny {name} sprite"), shiny),
+                ] {
+                    figure {
+                        key: "{label}",
+                        class: "w-full max-w-36 sm:max-w-48",
+                        div {
+                            class: "flex aspect-square w-full items-center justify-center",
+                            if let Some(src) = src {
+                                img {
+                                    class: "pixelated size-full object-contain",
+                                    src,
+                                    alt,
+                                    width: "96",
+                                    height: "96",
+                                }
+                            } else {
+                                {picture_placeholder(sprites.is_some())}
+                            }
+                        }
+                        figcaption { class: "mt-2 text-center {LABEL}", "{label}" }
                     }
                 }
             }
@@ -114,11 +192,83 @@ fn details(data: &PokemonData, sprite_layout: SpriteLayout) -> Element {
     }
 }
 
+/// What a picture box holds when it has no image: a pulse while the data loads, or a
+/// note once it is known that PokeAPI has no such image.
+fn picture_placeholder(loaded: bool) -> Element {
+    if loaded {
+        rsx! {
+            p { class: "text-center text-sm text-muted", "No image available" }
+        }
+    } else {
+        rsx! {
+            div { class: "size-2/3 {SKELETON}" }
+        }
+    }
+}
+
+fn stats(pokemon: &Pokemon) -> Element {
+    rsx! {
+        dl {
+            class: "mt-6 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-line pt-5 sm:grid-cols-[auto_auto_1fr] sm:gap-x-12",
+            div {
+                dt { class: LABEL, "Height" }
+                dd { class: "mt-1 text-lg", {format_height(pokemon.height)} }
+            }
+            div {
+                dt { class: LABEL, "Weight" }
+                dd { class: "mt-1 text-lg", {format_weight(pokemon.weight)} }
+            }
+            div {
+                class: "col-span-2 sm:col-span-1",
+                dt { class: LABEL, "Abilities" }
+                dd { class: "mt-1 text-lg", {ability_list(pokemon)} }
+            }
+        }
+    }
+}
+
+fn pokedex_entries(data: &PokemonData) -> Element {
+    rsx! {
+        section {
+            class: "mt-6 border-t border-line pt-5",
+            h3 { class: "text-lg font-semibold", "Pokédex entries" }
+            if data.entries.is_empty() {
+                p { class: "mt-2 text-muted", "No English Pokédex entries yet." }
+            }
+            ul {
+                class: "mt-1 divide-y divide-line",
+                for entry in &data.entries {
+                    li {
+                        key: "{entry.text}",
+                        class: "py-4 last:pb-0",
+                        p { class: "leading-relaxed", "{entry.text}" }
+                        ul {
+                            class: "mt-2.5 flex flex-wrap gap-1.5",
+                            aria_label: "Game versions",
+                            for version in &entry.versions {
+                                li {
+                                    key: "{version}",
+                                    class: "rounded-md bg-sunken px-2 py-0.5 text-xs text-muted ring-1 ring-inset ring-line",
+                                    {version_label(version)}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// The abilities as a readable list. PokeAPI lists an ability twice when a Pokémon
+/// has it both as a regular and as its hidden ability.
 fn ability_list(pokemon: &Pokemon) -> String {
-    pokemon
-        .abilities
-        .iter()
-        .map(|slot| capitalize(&slot.ability.name))
-        .collect::<Vec<_>>()
-        .join(", ")
+    let mut names: Vec<String> = Vec::new();
+    for slot in &pokemon.abilities {
+        let name = title_case_slug(&slot.ability.name);
+        if !names.contains(&name) {
+            names.push(name);
+        }
+    }
+    names.join(", ")
 }

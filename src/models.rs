@@ -30,6 +30,19 @@ pub struct PokemonType {
 pub struct PokemonSprites {
     front_default: Option<String>,
     front_shiny: Option<String>,
+    #[serde(default)]
+    other: Option<OtherSprites>,
+}
+
+#[derive(Deserialize, Clone, Debug, PartialEq)]
+struct OtherSprites {
+    #[serde(rename = "official-artwork", default)]
+    official_artwork: Option<Artwork>,
+}
+
+#[derive(Deserialize, Clone, Debug, PartialEq)]
+struct Artwork {
+    front_default: Option<String>,
 }
 
 impl PokemonSprites {
@@ -39,6 +52,12 @@ impl PokemonSprites {
 
     pub fn front_shiny(&self) -> Option<&str> {
         non_empty(&self.front_shiny)
+    }
+
+    /// The large illustration, as opposed to the in-game pixel sprites.
+    pub fn official_artwork(&self) -> Option<&str> {
+        let artwork = self.other.as_ref()?.official_artwork.as_ref()?;
+        non_empty(&artwork.front_default)
     }
 }
 
@@ -86,11 +105,39 @@ pub struct FlavorText {
     pub text: String,
 }
 
+/// A Pokédex entry together with every game version that words it identically.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PokedexEntry {
+    pub text: String,
+    /// PokeAPI version slugs, in the order the versions were listed.
+    pub versions: Vec<String>,
+}
+
+/// Merges entries with identical text, keeping the order in which each text first
+/// appears. Paired and re-released games mostly repeat one another word for word.
+pub fn group_flavor_texts(flavor_texts: Vec<FlavorText>) -> Vec<PokedexEntry> {
+    let mut entries: Vec<PokedexEntry> = Vec::new();
+    for FlavorText { version, text } in flavor_texts {
+        match entries.iter_mut().find(|entry| entry.text == text) {
+            Some(entry) => {
+                if !entry.versions.contains(&version) {
+                    entry.versions.push(version);
+                }
+            }
+            None => entries.push(PokedexEntry {
+                text,
+                versions: vec![version],
+            }),
+        }
+    }
+    entries
+}
+
 /// Everything the detail view shows for one Pokémon.
 #[derive(Clone, Debug, PartialEq)]
 pub struct PokemonData {
     pub pokemon: Pokemon,
-    pub flavor_texts: Vec<FlavorText>,
+    pub entries: Vec<PokedexEntry>,
 }
 
 #[cfg(test)]
@@ -117,7 +164,13 @@ mod tests {
             "front_default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/558.png",
             "front_female": null,
             "front_shiny": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/558.png",
-            "other": {"home": {"front_default": "https://example.invalid/home/558.png"}}
+            "other": {
+                "home": {"front_default": "https://example.invalid/home/558.png"},
+                "official-artwork": {
+                    "front_default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/558.png",
+                    "front_shiny": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/shiny/558.png"
+                }
+            }
         },
         "types": [
             {"slot": 1, "type": {"name": "bug", "url": "https://pokeapi.co/api/v2/type/7/"}},
@@ -197,6 +250,81 @@ mod tests {
 
         let sprites: PokemonSprites = serde_json::from_str("{}").unwrap();
         assert_eq!(sprites.front_default(), None);
+    }
+
+    #[test]
+    fn official_artwork_is_read_from_the_nested_sprites() {
+        assert_eq!(
+            pokemon().sprites.official_artwork(),
+            Some(
+                "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/558.png"
+            )
+        );
+    }
+
+    #[test]
+    fn missing_official_artwork_is_none() {
+        for json in [
+            "{}",
+            r#"{"other": null}"#,
+            r#"{"other": {}}"#,
+            r#"{"other": {"official-artwork": null}}"#,
+            r#"{"other": {"home": {"front_default": "x"}}}"#,
+            r#"{"other": {"official-artwork": {}}}"#,
+            r#"{"other": {"official-artwork": {"front_default": null}}}"#,
+            r#"{"other": {"official-artwork": {"front_default": ""}}}"#,
+        ] {
+            let sprites: PokemonSprites = serde_json::from_str(json).unwrap();
+            assert_eq!(sprites.official_artwork(), None, "{json}");
+        }
+    }
+
+    fn flavor(version: &str, text: &str) -> FlavorText {
+        FlavorText {
+            version: version.into(),
+            text: text.into(),
+        }
+    }
+
+    #[test]
+    fn identical_texts_are_grouped_with_their_versions() {
+        let grouped = group_flavor_texts(vec![
+            flavor("black", "It fights viciously."),
+            flavor("white", "It fights viciously."),
+            flavor("black-2", "It carries a boulder."),
+            flavor("x", "It fights viciously."),
+            flavor("white-2", "It carries a boulder."),
+            flavor("sword", "Its boulder is heavy."),
+        ]);
+        assert_eq!(
+            grouped,
+            [
+                PokedexEntry {
+                    text: "It fights viciously.".into(),
+                    versions: vec!["black".into(), "white".into(), "x".into()],
+                },
+                PokedexEntry {
+                    text: "It carries a boulder.".into(),
+                    versions: vec!["black-2".into(), "white-2".into()],
+                },
+                PokedexEntry {
+                    text: "Its boulder is heavy.".into(),
+                    versions: vec!["sword".into()],
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn grouping_does_not_repeat_a_version() {
+        let grouped = group_flavor_texts(vec![flavor("red", "Same."), flavor("red", "Same.")]);
+        assert_eq!(grouped.len(), 1);
+        assert_eq!(grouped[0].versions, ["red"]);
+    }
+
+    #[test]
+    fn grouping_nothing_gives_nothing() {
+        assert_eq!(group_flavor_texts(Vec::new()), []);
     }
 
     #[test]

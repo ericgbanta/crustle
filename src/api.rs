@@ -1,6 +1,6 @@
 //! PokeAPI client: the only module that builds URLs or talks to the network.
 
-use crate::models::{Pokemon, PokemonData, PokemonSpecies};
+use crate::models::{Pokemon, PokemonData, PokemonSpecies, group_flavor_texts};
 use futures_util::future::try_join;
 use serde::de::DeserializeOwned;
 use std::fmt;
@@ -59,7 +59,7 @@ pub async fn fetch_pokemon_data(dex_id: u32) -> Result<PokemonData, ApiError> {
     let (pokemon, species) = try_join(fetch_pokemon(dex_id), fetch_species(dex_id)).await?;
     Ok(PokemonData {
         pokemon,
-        flavor_texts: species.into_english_flavor_texts(),
+        entries: group_flavor_texts(species.into_english_flavor_texts()),
     })
 }
 

@@ -8,6 +8,38 @@ pub fn capitalize(s: &str) -> String {
     }
 }
 
+/// Turns a PokeAPI slug into words: `shell-armor` becomes "Shell Armor".
+pub fn title_case_slug(slug: &str) -> String {
+    slug.split('-')
+        .filter(|word| !word.is_empty())
+        .map(capitalize)
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+/// The display name of a game version, from its PokeAPI slug.
+pub fn version_label(slug: &str) -> String {
+    // Titles that are not simply their slug in title case.
+    let special = match slug {
+        "firered" => "FireRed",
+        "leafgreen" => "LeafGreen",
+        "heartgold" => "HeartGold",
+        "soulsilver" => "SoulSilver",
+        "xd" => "XD",
+        "lets-go-pikachu" => "Let's Go, Pikachu!",
+        "lets-go-eevee" => "Let's Go, Eevee!",
+        "legends-arceus" => "Legends: Arceus",
+        "legends-za" => "Legends: Z-A",
+        _ => return title_case_slug(slug),
+    };
+    special.to_string()
+}
+
+/// A national Pokédex number the way the games print it: `#0558`.
+pub fn dex_number(id: u32) -> String {
+    format!("#{id:04}")
+}
+
 /// PokeAPI reports height in decimetres.
 pub fn format_height(decimetres: u32) -> String {
     format!("{} m", tenths(decimetres))
@@ -61,6 +93,39 @@ mod tests {
         assert_eq!(capitalize("Rock"), "Rock");
         assert_eq!(capitalize("élan"), "Élan");
         assert_eq!(capitalize(""), "");
+    }
+
+    #[test]
+    fn slugs_read_as_words() {
+        assert_eq!(title_case_slug("shell-armor"), "Shell Armor");
+        assert_eq!(title_case_slug("sturdy"), "Sturdy");
+        assert_eq!(title_case_slug("black-2"), "Black 2");
+        assert_eq!(title_case_slug("power-of-alchemy"), "Power Of Alchemy");
+        assert_eq!(title_case_slug("-odd--slug-"), "Odd Slug");
+        assert_eq!(title_case_slug(""), "");
+    }
+
+    #[test]
+    fn version_labels_read_as_game_titles() {
+        assert_eq!(version_label("black-2"), "Black 2");
+        assert_eq!(version_label("omega-ruby"), "Omega Ruby");
+        assert_eq!(version_label("ultra-sun"), "Ultra Sun");
+        assert_eq!(version_label("x"), "X");
+        assert_eq!(version_label("firered"), "FireRed");
+        assert_eq!(version_label("heartgold"), "HeartGold");
+        assert_eq!(version_label("xd"), "XD");
+        assert_eq!(version_label("lets-go-eevee"), "Let's Go, Eevee!");
+        assert_eq!(version_label("legends-arceus"), "Legends: Arceus");
+        assert_eq!(version_label("legends-za"), "Legends: Z-A");
+        assert_eq!(version_label("some-future-game"), "Some Future Game");
+    }
+
+    #[test]
+    fn dex_numbers_are_padded_to_four_digits() {
+        assert_eq!(dex_number(1), "#0001");
+        assert_eq!(dex_number(558), "#0558");
+        assert_eq!(dex_number(1009), "#1009");
+        assert_eq!(dex_number(12345), "#12345");
     }
 
     #[test]
