@@ -110,7 +110,12 @@ pub fn PokemonDetails(entry: ReadSignal<DexEntry>, sprites: SpriteLayout) -> Ele
                             button {
                                 class: "mt-4 rounded-md border border-control bg-surface px-4 py-2 text-sm font-medium hover:bg-sunken",
                                 r#type: "button",
-                                onclick: move |_| data.restart(),
+                                // Dropping the failed response puts the card back in its
+                                // loading state while the new request runs.
+                                onclick: move |_| {
+                                    data.clear();
+                                    data.restart();
+                                },
                                 "Try again"
                             }
                         }

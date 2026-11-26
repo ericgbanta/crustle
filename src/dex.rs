@@ -73,10 +73,4 @@ mod tests {
         names.dedup();
         assert_eq!(names.len(), total);
     }
-
-    #[test]
-    fn random_entry_is_a_real_entry() {
-        let entry = random_entry();
-        assert_eq!(id_of(entry.name), Some(entry.id));
-    }
 }

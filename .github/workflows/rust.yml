@@ -29,7 +29,8 @@ jobs:
 
     - uses: Swatinem/rust-cache@v2
 
-    # Prebuilt binary; building dioxus-cli from source takes over ten minutes.
+    # install-action has no manifest for dioxus-cli and falls back to cargo-binstall,
+    # which downloads the release binary; building from source takes over ten minutes.
     - name: Install dioxus-cli
       uses: taiki-e/install-action@v2
       with:
@@ -45,6 +46,10 @@ jobs:
 
     - name: Clippy
       run: cargo clippy --target wasm32-unknown-unknown -- -D warnings
+
+    # Native, with test code included.
+    - name: Clippy (tests)
+      run: cargo clippy --all-targets -- -D warnings
 
     - name: Test
       run: cargo test

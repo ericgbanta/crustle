@@ -15,7 +15,8 @@ const OPTION_ACTIVE: &str =
 
 /// A search box with a result list, following the ARIA combobox pattern: typing
 /// filters by name or dex number, the arrow keys move through the results, Enter picks
-/// one and Escape closes the list. Focus stays in the text field throughout.
+/// one and Escape closes the list. Focus stays in the text field while the keyboard is
+/// used; picking an option with the pointer or by touch gives it up.
 #[component]
 pub fn PokemonPicker(on_select: EventHandler<DexEntry>) -> Element {
     let mut query = use_signal(String::new);
@@ -47,7 +48,15 @@ pub fn PokemonPicker(on_select: EventHandler<DexEntry>) -> Element {
                 active.set(step(from, shown, direction));
                 open.set(true);
             }
-            Key::Enter if open() => {
+            // After Escape the field still has its text but no list; Enter brings the
+            // list back rather than picking something the user cannot see.
+            Key::Enter if !open() => {
+                if !query.read().is_empty() {
+                    event.prevent_default();
+                    open.set(true);
+                }
+            }
+            Key::Enter => {
                 event.prevent_default();
                 // With no option highlighted, Enter takes the best match for what was
                 // typed, but never an arbitrary entry from the unfiltered list.
@@ -77,6 +86,7 @@ pub fn PokemonPicker(on_select: EventHandler<DexEntry>) -> Element {
     let results = matches.read();
     let active_entry = active().and_then(|index| results.entries.get(index).copied());
     let active_id = active_entry.filter(|_| open()).map(option_id);
+    let list_shown = open() && !results.entries.is_empty();
     let status = result_status(results.entries.len(), results.total, query.read().trim());
 
     rsx! {
@@ -99,7 +109,7 @@ pub fn PokemonPicker(on_select: EventHandler<DexEntry>) -> Element {
                     spellcheck: "false",
                     aria_autocomplete: "list",
                     aria_expanded: "{open}",
-                    aria_controls: LIST_ID,
+                    aria_controls: list_shown.then_some(LIST_ID),
                     aria_activedescendant: active_id,
                     value: "{query}",
                     onmounted: move |event| input.set(Some(event.data())),
@@ -143,24 +153,41 @@ pub fn PokemonPicker(on_select: EventHandler<DexEntry>) -> Element {
                         // Pressing on the list must not blur the field, or the list
                         // would close before the click lands.
                         onmousedown: move |event| event.prevent_default(),
-                        ul {
-                            id: LIST_ID,
-                            role: "listbox",
-                            aria_label: "Pokémon",
-                            for (index, entry) in results.entries.iter().copied().enumerate() {
-                                li {
-                                    key: "{entry.id}",
-                                    id: option_id(entry),
-                                    class: if active_entry == Some(entry) { OPTION_ACTIVE } else { OPTION },
-                                    role: "option",
-                                    aria_selected: active_entry == Some(entry),
-                                    onmouseenter: move |_| active.set(Some(index)),
-                                    onclick: move |_| choose(entry),
-                                    span {
-                                        class: "w-12 shrink-0 font-mono text-sm opacity-70",
-                                        {dex_number(entry.id)}
+                        if list_shown {
+                            ul {
+                                id: LIST_ID,
+                                role: "listbox",
+                                aria_label: "Pokémon",
+                                for (index, entry) in results.entries.iter().copied().enumerate() {
+                                    li {
+                                        key: "{entry.id}",
+                                        id: option_id(entry),
+                                        class: if active_entry == Some(entry) { OPTION_ACTIVE } else { OPTION },
+                                        role: "option",
+                                        aria_selected: active_entry == Some(entry),
+                                        // Movement, not mouseenter: a pointer resting where
+                                        // the list appears must not take the highlight.
+                                        onmousemove: move |_| {
+                                            if active() != Some(index) {
+                                                active.set(Some(index));
+                                            }
+                                        },
+                                        onclick: move |_| {
+                                            choose(entry);
+                                            // Hides the on-screen keyboard, which would
+                                            // otherwise cover the card just asked for.
+                                            if let Some(input) = input() {
+                                                spawn(async move {
+                                                    let _ = input.set_focus(false).await;
+                                                });
+                                            }
+                                        },
+                                        span {
+                                            class: "w-12 shrink-0 font-mono text-sm opacity-70",
+                                            {dex_number(entry.id)}
+                                        }
+                                        span { class: "truncate", "{entry.name}" }
                                     }
-                                    span { class: "truncate", "{entry.name}" }
                                 }
                             }
                         }
@@ -196,16 +223,17 @@ enum Step {
 }
 
 /// Where the highlight goes when an arrow key is pressed in a list of `len` options.
-/// From nothing it enters at the near end, and it wraps around at both ends.
+/// From nothing it enters at the near end, and it wraps around at both ends. An index
+/// past the end of the list highlights nothing on screen, so it counts as nothing.
 fn step(active: Option<usize>, len: usize, direction: Step) -> Option<usize> {
     if len == 0 {
         return None;
     }
-    Some(match (active, direction) {
+    Some(match (active.filter(|&index| index < len), direction) {
         (None, Step::Next) => 0,
         (None, Step::Previous) => len - 1,
         (Some(index), Step::Next) => (index + 1) % len,
-        (Some(index), Step::Previous) => (index.min(len - 1) + len - 1) % len,
+        (Some(index), Step::Previous) => (index + len - 1) % len,
     })
 }
 
@@ -257,9 +285,10 @@ mod tests {
     }
 
     #[test]
-    fn a_stale_highlight_is_brought_back_in_range() {
-        assert_eq!(step(Some(9), 3, Step::Next), Some(1));
-        assert_eq!(step(Some(9), 3, Step::Previous), Some(1));
+    fn an_out_of_range_highlight_counts_as_none() {
+        assert_eq!(step(Some(9), 3, Step::Next), step(None, 3, Step::Next));
+        assert_eq!(step(Some(3), 3, Step::Next), Some(0));
+        assert_eq!(step(Some(9), 3, Step::Previous), Some(2));
     }
 
     #[test]

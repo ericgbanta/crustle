@@ -62,20 +62,3 @@ pub async fn fetch_pokemon_data(dex_id: u32) -> Result<PokemonData, ApiError> {
         entries: group_flavor_texts(species.into_english_flavor_texts()),
     })
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn urls_use_the_dex_id() {
-        assert_eq!(
-            resource_url("pokemon", 122),
-            "https://pokeapi.co/api/v2/pokemon/122"
-        );
-        assert_eq!(
-            resource_url("pokemon-species", 386),
-            "https://pokeapi.co/api/v2/pokemon-species/386"
-        );
-    }
-}

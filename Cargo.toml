@@ -10,7 +10,7 @@ pokemon-rs = "1.7.0"
 # Not used directly: pokemon-rs 1.7 -> rand 0.8 -> getrandom 0.2, which only builds for
 # wasm32-unknown-unknown with its "js" feature enabled.
 getrandom = { version = "0.2", features = ["js"] }
-reqwest = { version = "0.13", features = ["json"] }
+reqwest = { version = "0.13", default-features = false, features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 
 [dev-dependencies]

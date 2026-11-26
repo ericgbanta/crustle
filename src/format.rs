@@ -8,11 +8,26 @@ pub fn capitalize(s: &str) -> String {
     }
 }
 
-/// Turns a PokeAPI slug into words: `shell-armor` becomes "Shell Armor".
+/// Turns a PokeAPI slug into a title: `shell-armor` becomes "Shell Armor" and
+/// `power-of-alchemy` "Power of Alchemy". Small words stay lowercase unless they
+/// come first.
 pub fn title_case_slug(slug: &str) -> String {
+    const SMALL_WORDS: [&str; 6] = ["of", "to", "as", "the", "and", "in"];
+
+    // An initialism, which no casing rule would get right.
+    if slug == "rks-system" {
+        return "RKS System".to_string();
+    }
     slug.split('-')
         .filter(|word| !word.is_empty())
-        .map(capitalize)
+        .enumerate()
+        .map(|(index, word)| {
+            if index > 0 && SMALL_WORDS.contains(&word) {
+                word.to_string()
+            } else {
+                capitalize(word)
+            }
+        })
         .collect::<Vec<_>>()
         .join(" ")
 }
@@ -59,18 +74,30 @@ fn tenths(value: u32) -> String {
 ///
 /// Newlines and form feeds (page breaks) become single spaces. A soft hyphen marks a
 /// word that was split across lines, so it is removed together with the break after it.
+/// A real hyphen that ends a line belongs to a compound split there ("bluish-\nwhite"),
+/// so it is kept and only the break is removed.
 pub fn normalize_flavor_text(raw: &str) -> String {
     const SOFT_HYPHEN: char = '\u{ad}';
 
     let mut text = String::with_capacity(raw.len());
     let mut joining_word = false;
     let mut pending_space = false;
+    // The last character was a hyphen attached to a word, or the `\r` of a `\r\n`
+    // right after one.
+    let mut after_hyphen = false;
     for c in raw.chars() {
         if c == SOFT_HYPHEN {
             joining_word = true;
+            after_hyphen = false;
         } else if c.is_whitespace() {
+            if after_hyphen && matches!(c, '\n' | '\x0c') {
+                joining_word = true;
+            }
+            after_hyphen = after_hyphen && c == '\r';
             pending_space = !joining_word;
         } else {
+            // A hyphen with a space before it is a dash between words, not part of one.
+            after_hyphen = c == '-' && !pending_space && !text.is_empty();
             if pending_space && !text.is_empty() {
                 text.push(' ');
             }
@@ -100,9 +127,24 @@ mod tests {
         assert_eq!(title_case_slug("shell-armor"), "Shell Armor");
         assert_eq!(title_case_slug("sturdy"), "Sturdy");
         assert_eq!(title_case_slug("black-2"), "Black 2");
-        assert_eq!(title_case_slug("power-of-alchemy"), "Power Of Alchemy");
         assert_eq!(title_case_slug("-odd--slug-"), "Odd Slug");
         assert_eq!(title_case_slug(""), "");
+    }
+
+    #[test]
+    fn small_words_stay_lowercase_unless_first() {
+        assert_eq!(title_case_slug("power-of-alchemy"), "Power of Alchemy");
+        assert_eq!(title_case_slug("good-as-gold"), "Good as Gold");
+        assert_eq!(title_case_slug("beads-of-ruin"), "Beads of Ruin");
+        assert_eq!(title_case_slug("zero-to-hero"), "Zero to Hero");
+        assert_eq!(title_case_slug("as-one-glastrier"), "As One Glastrier");
+        assert_eq!(title_case_slug("the-isle-of-armor"), "The Isle of Armor");
+        assert_eq!(title_case_slug("-of-ruin"), "Of Ruin");
+    }
+
+    #[test]
+    fn initialisms_keep_their_capitals() {
+        assert_eq!(title_case_slug("rks-system"), "RKS System");
     }
 
     #[test]
@@ -117,6 +159,8 @@ mod tests {
         assert_eq!(version_label("lets-go-eevee"), "Let's Go, Eevee!");
         assert_eq!(version_label("legends-arceus"), "Legends: Arceus");
         assert_eq!(version_label("legends-za"), "Legends: Z-A");
+        assert_eq!(version_label("lets-go-pikachu"), "Let's Go, Pikachu!");
+        assert_eq!(version_label("the-crown-tundra"), "The Crown Tundra");
         assert_eq!(version_label("some-future-game"), "Some Future Game");
     }
 
@@ -182,5 +226,27 @@ mod tests {
             normalize_flavor_text("a well-known\nfire-type"),
             "a well-known fire-type"
         );
+    }
+
+    #[test]
+    fn a_hyphen_at_a_line_break_joins_the_compound() {
+        assert_eq!(
+            normalize_flavor_text("with bluish-\nwhite flames"),
+            "with bluish-white flames"
+        );
+        assert_eq!(normalize_flavor_text("at high-\r\nspeed"), "at high-speed");
+        assert_eq!(normalize_flavor_text("ultra-\x0csonic"), "ultra-sonic");
+    }
+
+    #[test]
+    fn a_hyphen_not_at_a_line_break_keeps_its_spacing() {
+        assert_eq!(normalize_flavor_text("well - maybe"), "well - maybe");
+        assert_eq!(normalize_flavor_text("well- maybe"), "well- maybe");
+        assert_eq!(
+            normalize_flavor_text("high-speed\nflight"),
+            "high-speed flight"
+        );
+        assert_eq!(normalize_flavor_text("wait -\nwhat"), "wait - what");
+        assert_eq!(normalize_flavor_text("high-\rspeed"), "high- speed");
     }
 }

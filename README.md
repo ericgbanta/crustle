@@ -38,7 +38,7 @@ cargo test
 CI runs the format check, clippy, the tests and a release build on every push and pull request to `main`.
 
 ### Preview
-![Image](https://github.com/ericgbanta/crustle/assets/44131634/961b68c7-4604-4634-8dc2-1150242428d3)
+![The Pokédex page showing Crustle](docs/preview.png)
 
 ### Credits
 ***Data provided by the wonderful folks at [PokeAPI](https://pokeapi.co/).***
