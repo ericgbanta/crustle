@@ -1,4 +1,4 @@
-name: Rust
+name: CI
 
 on:
   push:
@@ -6,17 +6,48 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  check:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
+
+    # Installs the toolchain, target and components listed in rust-toolchain.toml.
+    - name: Install Rust
+      run: rustup toolchain install
+
+    - uses: Swatinem/rust-cache@v2
+
+    # Prebuilt binary; building dioxus-cli from source takes over ten minutes.
+    - name: Install dioxus-cli
+      uses: taiki-e/install-action@v2
+      with:
+        tool: dioxus-cli@0.7.10
+
+    - name: Check formatting
+      run: cargo fmt --check
+
+    # dx runs Tailwind and writes assets/tailwind.css. The asset!() macro needs
+    # that file at compile time, so this has to come before any plain cargo step.
     - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      run: dx build --web
+
+    - name: Clippy
+      run: cargo clippy --target wasm32-unknown-unknown -- -D warnings
+
+    - name: Test
+      run: cargo test
+
+    - name: Release build
+      run: dx build --release --web
